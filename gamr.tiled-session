@@ -23,10 +23,10 @@
         },
         "lvl1.tmx": {
             "scale": 1.9348333333333332,
-            "selectedLayer": 0,
+            "selectedLayer": 2,
             "viewCenter": {
                 "x": 399.25919545180466,
-                "y": 300.54268240158495
+                "y": 300.542682401585
             }
         },
         "lvl1.tmx#New Piskel": {
@@ -66,8 +66,12 @@
             "scaleInEditor": 1
         },
         "lvl2.tmx": {
+            "expandedObjectLayers": [
+                6,
+                7
+            ],
             "scale": 1.9348333333333332,
-            "selectedLayer": 0,
+            "selectedLayer": 2,
             "viewCenter": {
                 "x": 399.7760358342665,
                 "y": 300.0258420191231
@@ -93,8 +97,12 @@
             "scaleInDock": 1
         },
         "lvl3.tmx": {
+            "expandedObjectLayers": [
+                6,
+                7
+            ],
             "scale": 1.9348333333333332,
-            "selectedLayer": 0,
+            "selectedLayer": 2,
             "viewCenter": {
                 "x": 399.7760358342665,
                 "y": 300.0258420191231

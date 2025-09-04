@@ -1,8 +1,12 @@
 import arcade
+import os
 import arcade.gui
 from dataclasses import dataclass
 from pathlib import Path
+from pyglet.window import key
+from PIL import Image
 import pyglet
+import math
 
 def draw_fullscreen_texture(window: arcade.Window, texture: arcade.Texture):
     w, h = window.width, window.height
@@ -62,7 +66,7 @@ PLAYER_FRICTION = 0.1       # как быстро тормозит (0 = резк
 PLAYER_SPEED = 3      # скорость движения влево/вправо
 JUMP_SPEED = 0.5     # сила прыжка
 REQUIRE_GEMS = True
-
+MAX_JUMPS = 2
 
 # Клавиши по умолчанию
 DEFAULT_KEYS = {
@@ -85,21 +89,60 @@ class GameConfig:
     difficulty: str = "Нормальная"
     sound_on: bool = True
     show_hints: bool = True
+def make_texture_pair(image_path: str):
+
+    tex_right = arcade.load_texture(image_path)
+    img = Image.open(image_path).convert("RGBA")
+    img_left = img.transpose(Image.FLIP_LEFT_RIGHT)
+    name_left = f"{os.path.basename(image_path)}__left"
+    tex_left = arcade.Texture(name=name_left, image=img_left)
+    return tex_right, tex_left
+class AudioManager:
+    def __init__(self):
+        self.menu_music = None
+        self.game_music = None
+        self.current_player = None
+        self.sound_on = True
+
+    def play_music(self, path, loop=True):
+        if not self.sound_on:
+            return
+        if self.current_player:
+            self.current_player.pause()
+            self.current_player.delete()
+            self.current_player = None
+
+        sound = arcade.Sound(path, streaming=True)
+        self.current_player = sound.play(loop=loop)
+        return sound
+
+    def stop(self):
+        """Полностью остановить музыку"""
+        if self.current_player:
+            self.current_player.pause()
+            self.current_player.delete()
+            self.current_player = None
+
+    def set_sound(self, enabled: bool):
+        """Вкл/выкл звук"""
+        self.sound_on = enabled
+        if not enabled:
+            self.stop()
 
 def apply_config(cfg: GameConfig):
     global PLAYER_MOVE_SPEED, PLAYER_JUMP_SPEED, GRAVITY
     if cfg.difficulty == "Лёгкая":
         PLAYER_MOVE_SPEED = 6
-        PLAYER_JUMP_SPEED = 5
+        PLAYER_JUMP_SPEED = 18
         GRAVITY = 1.25
     elif cfg.difficulty == "Сложная":
-        PLAYER_MOVE_SPEED = 4
-        PLAYER_JUMP_SPEED = 3
-        GRAVITY = 2
-    else:
         PLAYER_MOVE_SPEED = 5
-        PLAYER_JUMP_SPEED = 2
-        GRAVITY = 1.5
+        PLAYER_JUMP_SPEED = 15
+        GRAVITY = 1
+    else:
+        PLAYER_MOVE_SPEED = 4
+        PLAYER_JUMP_SPEED = 7
+        GRAVITY = 0.5
 
 # === Игровые классы ===
 class Player(arcade.Sprite):
@@ -109,9 +152,9 @@ class Player(arcade.Sprite):
         self.change_x = 0
         self.change_y = 0
         self.max_speed = 5  # максимальная скорость по X
-        self.acceleration = 0.5  # ускорение
-        self.friction = 0.1  # замедление
-        self.jump_strength = 15  # сила прыжка
+        self.acceleration = 0.7  # ускорение
+        self.friction = 0.8  # замедление
+        self.jump_strength = 13  # сила прыжка
         self.can_jump = False
 
     def update_movement(self, keys: pyglet.window.key.KeyStateHandler):
@@ -137,20 +180,24 @@ class Player(arcade.Sprite):
         if keys[self.controls["jump"]] and self.can_jump:
             self.change_y = PLAYER_JUMP_SPEED
             self.can_jump = False
-    def update(self, delta_time: float = 1/60):
+
+    def update(self, platforms: arcade.SpriteList, delta_time: float = 1 / 60):
+        # Двигаем по X и Y
         self.center_x += self.change_x
         self.center_y += self.change_y
         self.change_y -= GRAVITY
 
-        # Проверка "на земле"
-        if self.center_y <= 64:  # 64 = условная высота пола/платформ
-            self.center_y = 64
-            self.change_y = 0
-            self.can_jump = True
+        # Проверка коллизий с платформами
+        hits = arcade.check_for_collision_with_list(self, platforms)
+        if hits:
+            # ставим игрока поверх платформы
+            for platform in hits:
+                if self.change_y <= 0:  # только если падали вниз
+                    self.bottom = platform.top
+                    self.change_y = 0
+                    self.can_jump = True
         else:
             self.can_jump = False
-
-
 class BaseUIView(arcade.View):
     """Базовый класс для всех экранов с UIManager'ом."""
     def __init__(self):
@@ -209,7 +256,9 @@ class MainMenuView(BaseUIView):
     def on_show_view(self):
         self.manager.enable()
         self.manager.clear()
-
+        super().on_show_view()
+        # Меню-музыка
+        self.window.audio.play_music("assets/music/menu.mp3")
         v_box = arcade.gui.UIBoxLayout(vertical=True, space_between=20)
 
         play_btn = ImageButton(self.play_texture, scale=0.3)
@@ -260,7 +309,7 @@ class LevelSelectView(BaseUIView):
         super().on_show_view()
         self.manager.enable()
         self.manager.clear()
-
+        self.window.audio.play_music("assets/music/menu.mp3")
         v_box = arcade.gui.UIBoxLayout()
 
         # Заголовок
@@ -327,7 +376,9 @@ class SettingsView(BaseUIView):
 
         self.manager.enable()
         self.manager.clear()
-
+        super().on_show_view()
+        # Меню-музыка
+        self.window.audio.play_music("assets/music/menu.mp3")
         v_box = arcade.gui.UIBoxLayout(space_between=5)
 
 
@@ -383,9 +434,11 @@ class SettingsView(BaseUIView):
         self._refresh_labels()
 
     def _on_toggle_sound(self, *_):
-        self._ensure_config()
-        cfg = self.window.game_config
+        cfg: GameConfig = getattr(self.window, "game_config", GameConfig())
         cfg.sound_on = not cfg.sound_on
+        setattr(self.window, "game_config", cfg)
+        # переключаем музыку
+        self.window.audio.set_sound(cfg.sound_on)
         self._refresh_labels()
 
     def _on_toggle_hints(self, *_):
@@ -423,7 +476,8 @@ class PauseView(arcade.View):
     def on_show_view(self):
         self.manager.enable()
         self.manager.clear()
-
+        super().on_show_view()
+        self.window.audio.play_music("assets/music/pause.mp3")
         v_box = arcade.gui.UIBoxLayout()
         v_box.add(arcade.gui.UILabel(text="ПАУЗА", font_size=22, bold=True))
 
@@ -464,7 +518,7 @@ class WinView(BaseUIView):
     def on_show_view(self):
         super().on_show_view()
         arcade.set_background_color(arcade.color.DARK_SPRING_GREEN)
-
+        self.window.audio.play_music("assets/music/win.mp3")
         box = arcade.gui.UIBoxLayout(space_between=10)
         box.add(arcade.gui.UILabel(text="ПОБЕДА!", font_size=24, bold=True),
                 space_around=(0, 0, 12, 0))
@@ -494,7 +548,7 @@ class LoseView(BaseUIView):
     def on_show_view(self):
         super().on_show_view()
         arcade.set_background_color(arcade.color.DARK_RED)
-
+        self.window.audio.play_music("assets/music/lose.mp3")
         box = arcade.gui.UIBoxLayout(space_between=10)
         box.add(arcade.gui.UILabel(text="ПОРАЖЕНИЕ", font_size=24, bold=True),
                 space_around=(0, 0, 12, 0))
@@ -556,25 +610,33 @@ class GameView(arcade.View):
         self.scene = arcade.Scene.from_tilemap(self.tile_map)
         FIRE_CONTROLS = {"left": arcade.key.A, "right": arcade.key.D, "jump": arcade.key.W}
         WATER_CONTROLS = {"left": arcade.key.LEFT, "right": arcade.key.RIGHT, "jump": arcade.key.UP}
-
+        spawn_fire = self.tile_map.object_lists["Fire_spawn"][0]
+        spawn_water = self.tile_map.object_lists["Water_spawn"][0]
         # Fire
         self.fire = Player("assets/sprites/fire.png", 0.045, FIRE_CONTROLS)
-        self.fire.center_x = 170
-        self.fire.center_y = 200
+        self.fire.center_x = spawn_fire.shape[0]
+        self.fire.center_y = spawn_fire.shape[1]+self.fire.height / 2
         self.players.append(self.fire)
 
         # Water
         self.water = Player("assets/sprites/water.png", 0.04, WATER_CONTROLS)
-        self.water.center_x = 200
-        self.water.center_y = 200
+        self.water.center_x = spawn_water.shape[0]
+        self.water.center_y = spawn_water.shape[1]+self.water.height / 2
         self.players.append(self.water)
 
         # Платформа для теста
+        hits = arcade.check_for_collision_with_list(self.fire, self.platforms)
+        if hits:
+            top = max(p.top for p in hits)
+            self.fire.bottom = top
+            self.fire.change_y = 0
 
     def on_show_view(self):
 
-        arcade.set_background_color(arcade.color.BLACK)
+        arcade.set_background_color(arcade.color.BLUE_SAPPHIRE)
 
+        super().on_show_view()
+        self.window.audio.play_music("assets/music/game.mp3")
 
     def on_draw(self):
         self.clear()
@@ -584,21 +646,6 @@ class GameView(arcade.View):
         self.hazards.draw()
         self.doors.draw()
         self.players.draw()
-        # === ОТЛАДКА: хитбоксы игроков и дверей ===
-        for sprite in [self.fire, self.water] + list(self.doors):
-            if not sprite:
-                continue
-            color = arcade.color.RED if sprite in self.doors else arcade.color.BLUE
-
-            # Рисуем прямоугольный контур по хитбоксу
-            arcade.draw_lrbt_rectangle_outline(
-                left=sprite.left,
-                right=sprite.right,
-                top=sprite.top,
-                bottom=sprite.bottom,
-                color=color,
-                border_width=2
-            )
 
         cfg: GameConfig = getattr(self.window, "game_config", GameConfig())
         if cfg.show_hints:
@@ -673,57 +720,24 @@ class GameView(arcade.View):
                 self.window.show_view(LoseView(self.level_num))
                 return
 
-
-        # --- проверка победы ---
+        # Проверка победы
         for door in self.doors:
             if arcade.check_for_collision(self.fire, door) and arcade.check_for_collision(self.water, door):
                 gems_done = (len(self.fire_gems) == 0 and len(self.water_gems) == 0) if REQUIRE_GEMS else True
                 if gems_done:
-                    if self.level_num < len(LEVELS):
-                        self.window.show_view(GameView(level=self.level_num + 1))
-                    else:
-                        self.window.show_view(WinView(self.level_num))
+                    self.window.show_view(WinView(self.level_num))
                 return
-
     def on_key_press(self, key, modifiers):
-        if key == self.fire.controls["left"]:
-            self.fire.change_x = -PLAYER_MOVE_SPEED
-        elif key == self.fire.controls["right"]:
-            self.fire.change_x = PLAYER_MOVE_SPEED
-        elif key == self.fire.controls["jump"] and self.fire.can_jump:
-            self.fire.change_y = PLAYER_JUMP_SPEED
-            self.fire.can_jump = False
-
-        if key == self.water.controls["left"]:
-            self.water.change_x = -PLAYER_MOVE_SPEED
-        elif key == self.water.controls["right"]:
-            self.water.change_x = PLAYER_MOVE_SPEED
-        elif key == self.water.controls["jump"] and self.water.can_jump:
-            self.water.change_y = PLAYER_JUMP_SPEED
-            self.water.can_jump = False
-
         if key == arcade.key.ESCAPE:
-            pause_view = PauseView(self)
-            self.window.show_view(pause_view)
-        for player in self.players:
-            if key == player.controls["left"]:
-                player.change_x = -PLAYER_SPEED
-            elif key == player.controls["right"]:
-                player.change_x = PLAYER_SPEED
-            elif key == player.controls["jump"]:
-                player.change_y = 13
-
-    def on_key_release(self, key, modifiers):
-        if key in (self.fire.controls["left"], self.fire.controls["right"]):
-            self.fire.change_x = 0
-        if key in (self.water.controls["left"], self.water.controls["right"]):
-            self.water.change_x = 0
+                    pause_view = PauseView(self)
+                    self.window.show_view(pause_view)
 
 
 # === Запуск ===
 def main():
     window = arcade.Window(800, 600, "Главное меню с картинками")
     menu = MainMenuView()
+    window.audio = AudioManager()
     window.show_view(menu)
     arcade.run()
 

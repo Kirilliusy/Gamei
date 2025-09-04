@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="40" height="30" tilewidth="20" tileheight="20" infinite="0" nextlayerid="6" nextobjectid="1">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="40" height="30" tilewidth="20" tileheight="20" infinite="0" nextlayerid="8" nextobjectid="8">
  <tileset firstgid="1" source="Blocks.tsx"/>
  <tileset firstgid="3" source="lvl1.tsx"/>
  <tileset firstgid="4" name="lvl12" tilewidth="20" tileheight="20" tilecount="1" columns="1">
@@ -62,6 +62,16 @@
 9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9
 </data>
  </layer>
+ <objectgroup id="6" name="Water_spawn">
+  <object id="6" x="631.062" y="483.763">
+   <point/>
+  </object>
+ </objectgroup>
+ <objectgroup id="7" name="Fire_spawn">
+  <object id="7" x="677.061" y="482.729">
+   <point/>
+  </object>
+ </objectgroup>
  <layer id="3" name="Hazards" width="40" height="30">
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
