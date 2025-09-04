@@ -1,0 +1,162 @@
+{
+    "Map/SizeTest": {
+        "height": 4300,
+        "width": 2
+    },
+    "activeFile": "lvl3.tmx",
+    "expandedProjectPaths": [
+        "."
+    ],
+    "file.lastUsedOpenFilter": "Все файлы (*)",
+    "fileStates": {
+        "": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "#lvl12": {
+            "dynamicWrapping": false
+        },
+        "Blocks.tsx": {
+            "dynamicWrapping": true,
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "lvl1.tmx": {
+            "scale": 1.9348333333333332,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 399.25919545180466,
+                "y": 300.54268240158495
+            }
+        },
+        "lvl1.tmx#New Piskel": {
+            "scaleInDock": 1
+        },
+        "lvl1.tmx#New Piskel (1)": {
+            "scaleInDock": 1
+        },
+        "lvl1.tmx#fire": {
+            "dynamicWrapping": false,
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "lvl1.tmx#lvl12": {
+            "dynamicWrapping": false,
+            "scaleInDock": 1
+        },
+        "lvl1.tmx#lvl2": {
+            "scaleInDock": 1
+        },
+        "lvl1.tmx#lvl22": {
+            "scaleInDock": 1
+        },
+        "lvl1.tmx#lvl3": {
+            "scaleInDock": 1
+        },
+        "lvl1.tmx#lvl33": {
+            "scaleInDock": 1
+        },
+        "lvl1.tmx#water": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "lvl1.tsx": {
+            "dynamicWrapping": false,
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "lvl2.tmx": {
+            "scale": 1.9348333333333332,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 399.7760358342665,
+                "y": 300.0258420191231
+            }
+        },
+        "lvl2.tmx#fire": {
+            "dynamicWrapping": false,
+            "scaleInDock": 1
+        },
+        "lvl2.tmx#lvl12": {
+            "scaleInDock": 1
+        },
+        "lvl2.tmx#lvl2": {
+            "scaleInDock": 1
+        },
+        "lvl2.tmx#lvl22": {
+            "scaleInDock": 1
+        },
+        "lvl2.tmx#lvl33": {
+            "scaleInDock": 1
+        },
+        "lvl2.tmx#water": {
+            "scaleInDock": 1
+        },
+        "lvl3.tmx": {
+            "scale": 1.9348333333333332,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 399.7760358342665,
+                "y": 300.0258420191231
+            }
+        },
+        "lvl3.tmx#fire": {
+            "scaleInDock": 1
+        },
+        "lvl3.tmx#lvl12": {
+            "scaleInDock": 1
+        },
+        "lvl3.tmx#lvl2": {
+            "scaleInDock": 1
+        },
+        "lvl3.tmx#lvl3": {
+            "scaleInDock": 1
+        },
+        "lvl3.tmx#lvl33": {
+            "scaleInDock": 1
+        },
+        "lvl3.tmx#water": {
+            "scaleInDock": 1
+        },
+        "дмд1.tmx": {
+            "scale": 1.9348333333333332,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 399.7760358342665,
+                "y": 113.96330433284521
+            }
+        },
+        "дмд1.tmx#lvl12": {
+            "scaleInDock": 1
+        }
+    },
+    "last.imagePath": "C:/gamr/blocs/lvl1",
+    "map.fixedSize": true,
+    "map.height": 30,
+    "map.lastUsedFormat": "tmx",
+    "map.tileHeight": 20,
+    "map.tileWidth": 20,
+    "map.width": 40,
+    "openFiles": [
+        "lvl1.tmx",
+        "lvl2.tmx",
+        "lvl3.tmx"
+    ],
+    "project": "gamr.tiled-project",
+    "property.type": "string",
+    "recentFiles": [
+        "lvl1.tmx",
+        "lvl2.tmx",
+        "lvl3.tmx",
+        "дмд1.tmx",
+        "Blocks.tsx",
+        "lvl1.tsx"
+    ],
+    "tileset.embedInMap": true,
+    "tileset.lastUsedFormat": "tsx",
+    "tileset.tileSize": {
+        "height": 20,
+        "width": 20
+    },
+    "tileset.type": 0
+}
