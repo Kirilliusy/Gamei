@@ -52,9 +52,8 @@ LEVELS = [
 ]
 
 # === Константы окна ===
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 600
-SCREEN_TITLE = "Огонь и Вода — Полная версия (Arcade 3.3.2)"
+SCREEN_WIDTH = 1200
+SCREEN_HEIGHT = 900
 TILE_SCALING = 1
 # === Базовые значения геймплея (могут меняться настройками) ===
 PLAYER_MOVE_SPEED = 3
@@ -73,30 +72,12 @@ DEFAULT_KEYS = {
     "fire": {"left": arcade.key.LEFT, "right": arcade.key.RIGHT, "jump": arcade.key.UP},
     "water": {"left": arcade.key.A, "right": arcade.key.D, "jump": arcade.key.W},
 }
-
-# Цвета
-FIRE_COLOR = arcade.color.RED
-WATER_COLOR = arcade.color.BLUE
-GEM_COLOR_FIRE = arcade.color.ORANGE_RED
-GEM_COLOR_WATER = arcade.color.CYAN
-HAZARD_COLOR = arcade.color.GREEN_YELLOW
-DOOR_COLOR_FIRE = arcade.color.DARK_RED
-DOOR_COLOR_WATER = arcade.color.DARK_BLUE
-PLATFORM_COLOR = arcade.color.BROWN
-
 @dataclass
 class GameConfig:
     difficulty: str = "Нормальная"
     sound_on: bool = True
     show_hints: bool = True
-def make_texture_pair(image_path: str):
 
-    tex_right = arcade.load_texture(image_path)
-    img = Image.open(image_path).convert("RGBA")
-    img_left = img.transpose(Image.FLIP_LEFT_RIGHT)
-    name_left = f"{os.path.basename(image_path)}__left"
-    tex_left = arcade.Texture(name=name_left, image=img_left)
-    return tex_right, tex_left
 class AudioManager:
     def __init__(self):
         self.menu_music = None
@@ -117,14 +98,12 @@ class AudioManager:
         return sound
 
     def stop(self):
-        """Полностью остановить музыку"""
         if self.current_player:
             self.current_player.pause()
             self.current_player.delete()
             self.current_player = None
 
     def set_sound(self, enabled: bool):
-        """Вкл/выкл звук"""
         self.sound_on = enabled
         if not enabled:
             self.stop()
@@ -132,16 +111,16 @@ class AudioManager:
 def apply_config(cfg: GameConfig):
     global PLAYER_MOVE_SPEED, PLAYER_JUMP_SPEED, GRAVITY
     if cfg.difficulty == "Лёгкая":
-        PLAYER_MOVE_SPEED = 6
-        PLAYER_JUMP_SPEED = 18
-        GRAVITY = 1.25
-    elif cfg.difficulty == "Сложная":
-        PLAYER_MOVE_SPEED = 5
-        PLAYER_JUMP_SPEED = 15
-        GRAVITY = 1
-    else:
         PLAYER_MOVE_SPEED = 4
-        PLAYER_JUMP_SPEED = 7
+        PLAYER_JUMP_SPEED = 10
+        GRAVITY = 0.5
+    elif cfg.difficulty == "Сложная":
+        PLAYER_MOVE_SPEED = 6
+        PLAYER_JUMP_SPEED = 12
+        GRAVITY = 0.5
+    else:
+        PLAYER_MOVE_SPEED = 5
+        PLAYER_JUMP_SPEED = 11
         GRAVITY = 0.5
 
 # === Игровые классы ===
@@ -151,9 +130,9 @@ class Player(arcade.Sprite):
         self.controls = controls
         self.change_x = 0
         self.change_y = 0
-        self.max_speed = 5  # максимальная скорость по X
-        self.acceleration = 0.7  # ускорение
-        self.friction = 0.8  # замедление
+        self.max_speed = 3  # максимальная скорость по X
+        self.acceleration = 0.4  # ускорение
+        self.friction = 3  # замедление
         self.jump_strength = 13  # сила прыжка
         self.can_jump = False
 
@@ -222,24 +201,32 @@ class BaseUIView(arcade.View):
         self.ui.add(anchor)
 
 class ImageButton(arcade.gui.UITextureButton):
-    def __init__(self, normal_texture: arcade.Texture, scale: float = 1.0, **kwargs):
+    def __init__(self, normal_texture: arcade.Texture, scale: float = 2.0, **kwargs):
         super().__init__(texture=normal_texture, scale=scale, **kwargs)
         self.normal_texture = normal_texture
-        self.target_scale = scale   # к чему стремимся
-        self.current_scale = scale  # текущий размер
 
-    def on_press(self):
-        self.target_scale = 0.9  # при нажатии уменьшаем
 
-    def on_release(self):
-        self.target_scale = 1.0  # отпустили — возвращаемся
+class SplashView(arcade.View):
+    def __init__(self):
+        super().__init__()
+        # Загружаем картинку заставки
+        self.background = arcade.load_texture("assets/Start.png")
 
-    def on_update(self, delta_time: float = 1/60):
-        # Плавно приближаем current_scale к target_scale
-        speed = 10  # скорость анимации
-        self.current_scale += (self.target_scale - self.current_scale) * speed * delta_time
-        self.scale = self.current_scale
-# ---------- ГЛАВНОЕ МЕНЮ ----------
+    def on_draw(self):
+        rect = arcade.LBWH(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT)
+
+        # ВАЖНО: сначала texture, потом rect
+        arcade.draw_texture_rect(self.background, rect)
+    def on_key_press(self, key, modifiers):
+        # Переход в главное меню
+        menu = MainMenuView()
+        self.window.show_view(menu)
+
+    def on_mouse_press(self, x, y, button, modifiers):
+        # Переход в главное меню
+        menu = MainMenuView()
+        self.window.show_view(menu)
+
 class MainMenuView(BaseUIView):
     def __init__(self):
         super().__init__()
@@ -261,9 +248,9 @@ class MainMenuView(BaseUIView):
         self.window.audio.play_music("assets/music/menu.mp3")
         v_box = arcade.gui.UIBoxLayout(vertical=True, space_between=20)
 
-        play_btn = ImageButton(self.play_texture, scale=0.3)
-        settings_btn = ImageButton(self.settings_texture, scale=0.3)
-        exit_btn = ImageButton(self.exit_texture, scale=0.3)
+        play_btn = ImageButton(self.play_texture, scale=0.4)
+        settings_btn = ImageButton(self.settings_texture, scale=0.4)
+        exit_btn = ImageButton(self.exit_texture, scale=0.4)
 
         play_btn.on_click = lambda e: self.window.show_view(LevelSelectView())
         settings_btn.on_click = lambda e: self.window.show_view(SettingsView())
@@ -310,19 +297,19 @@ class LevelSelectView(BaseUIView):
         self.manager.enable()
         self.manager.clear()
         self.window.audio.play_music("assets/music/menu.mp3")
-        v_box = arcade.gui.UIBoxLayout()
+        v_box = arcade.gui.UIBoxLayout(space_between=10)
 
         # Заголовок
 
         # Кнопки уровней
         from fix import GameView  # если в том же файле — убери
         for i in range(1, self.level_count + 1):
-            btn = arcade.gui.UIFlatButton(text=f"Уровень {i}", width=200)
+            btn = arcade.gui.UIFlatButton(text=f"Уровень {i}", width=300, height=50)
             btn.on_click = (lambda e, lvl=i: self.window.show_view(GameView(level=lvl)))
             v_box.add(btn, space_around=(0, 0, 10, 0))
 
         # Кнопка "Назад"
-        back = arcade.gui.UIFlatButton(text="Назад", width=200)
+        back = arcade.gui.UIFlatButton(text="Назад", width=300, height=50)
         back.on_click = lambda e: self.window.show_view(self.return_to or MainMenuView())
         v_box.add(back, space_around=(20, 0, 0, 0))
 
@@ -379,22 +366,22 @@ class SettingsView(BaseUIView):
         super().on_show_view()
         # Меню-музыка
         self.window.audio.play_music("assets/music/menu.mp3")
-        v_box = arcade.gui.UIBoxLayout(space_between=5)
+        v_box = arcade.gui.UIBoxLayout(space_between=10)
 
 
-        self._btn_difficulty = arcade.gui.UIFlatButton(text="", width=300)
+        self._btn_difficulty = arcade.gui.UIFlatButton(text="", width=300, height=50)
         self._btn_difficulty.on_click = self._on_toggle_difficulty
         v_box.add(self._btn_difficulty)
 
-        self._btn_sound = arcade.gui.UIFlatButton(text="", width=300)
+        self._btn_sound = arcade.gui.UIFlatButton(text="", width=300, height=50)
         self._btn_sound.on_click = self._on_toggle_sound
         v_box.add(self._btn_sound)
 
-        self._btn_hints = arcade.gui.UIFlatButton(text="", width=300)
+        self._btn_hints = arcade.gui.UIFlatButton(text="", width=300, height=50)
         self._btn_hints.on_click = self._on_toggle_hints
         v_box.add(self._btn_hints)
 
-        self._btn_back = arcade.gui.UIFlatButton(text="Назад", width=300)
+        self._btn_back = arcade.gui.UIFlatButton(text="Назад", width=300, height=50)
         self._btn_back.on_click = self._go_back
         v_box.add(self._btn_back, space_around=(12, 0, 0, 0))
 
@@ -478,18 +465,18 @@ class PauseView(arcade.View):
         self.manager.clear()
         super().on_show_view()
         self.window.audio.play_music("assets/music/pause.mp3")
-        v_box = arcade.gui.UIBoxLayout()
+        v_box = arcade.gui.UIBoxLayout(space_between=10)
         v_box.add(arcade.gui.UILabel(text="ПАУЗА", font_size=22, bold=True))
 
-        resume_btn = arcade.gui.UIFlatButton(text="Продолжить", width=240)
+        resume_btn = arcade.gui.UIFlatButton(text="Продолжить", width=300, height=50)
         resume_btn.on_click = lambda e: self.window.show_view(self.game_view)
         v_box.add(resume_btn)
 
-        restart_btn = arcade.gui.UIFlatButton(text="Перезапуск уровня", width=240)
+        restart_btn = arcade.gui.UIFlatButton(text="Перезапуск уровня", width=300, height=50)
         restart_btn.on_click = lambda e: self.window.show_view(GameView(level=self.game_view.level_num))
         v_box.add(restart_btn)
 
-        menu_btn = arcade.gui.UIFlatButton(text="Главное меню", width=240)
+        menu_btn = arcade.gui.UIFlatButton(text="Главное меню", width=300, height=50)
         menu_btn.on_click = lambda e: self.window.show_view(MainMenuView())
         v_box.add(menu_btn)
 
@@ -524,15 +511,15 @@ class WinView(BaseUIView):
                 space_around=(0, 0, 12, 0))
 
         if self.has_next:
-            next_btn = arcade.gui.UIFlatButton(text="Следующий уровень", width=260)
+            next_btn = arcade.gui.UIFlatButton(text="Следующий уровень", width=300, height=50)
             next_btn.on_click = lambda e: self.window.show_view(GameView(level=self.level_num + 1))
             box.add(next_btn)
 
-        level_select = arcade.gui.UIFlatButton(text="Выбор уровня", width=260)
+        level_select = arcade.gui.UIFlatButton(text="Выбор уровня", width=300, height=50)
         level_select.on_click = lambda e: self.window.show_view(LevelSelectView())
         box.add(level_select)
 
-        main_menu = arcade.gui.UIFlatButton(text="Главное меню", width=260)
+        main_menu = arcade.gui.UIFlatButton(text="Главное меню", width=300, height=50)
         main_menu.on_click = lambda e: self.window.show_view(MainMenuView())
         box.add(main_menu)
 
@@ -553,11 +540,11 @@ class LoseView(BaseUIView):
         box.add(arcade.gui.UILabel(text="ПОРАЖЕНИЕ", font_size=24, bold=True),
                 space_around=(0, 0, 12, 0))
 
-        retry = arcade.gui.UIFlatButton(text="Заново", width=240)
+        retry = arcade.gui.UIFlatButton(text="Заново", width=300, height=50)
         retry.on_click = lambda e: self.window.show_view(GameView(level=self.level_num))
         box.add(retry)
 
-        main_menu = arcade.gui.UIFlatButton(text="Главное меню", width=240)
+        main_menu = arcade.gui.UIFlatButton(text="Главное меню", width=300, height=50)
         main_menu.on_click = lambda e: self.window.show_view(MainMenuView())
         box.add(main_menu)
 
@@ -598,9 +585,9 @@ class GameView(arcade.View):
             "Hazards": {"use_spatial_hash": False},
             "Doors": {"use_spatial_hash": False}
         }
-        self.players = arcade.SpriteList()  # <-- тут создаём список игроков
+        self.players = arcade.SpriteList()
         map_name = f"C:/gamr/lvl{self.level_num}.tmx"
-        tile_map = arcade.load_tilemap(map_name, scaling=1.0)
+        tile_map = arcade.load_tilemap(map_name, scaling=1.5)
         self.platforms = tile_map.sprite_lists.get("Platforms", arcade.SpriteList())
         self.fire_gems = tile_map.sprite_lists.get("fire_gems", arcade.SpriteList())
         self.water_gems = tile_map.sprite_lists.get("water_gems", arcade.SpriteList())
@@ -613,13 +600,13 @@ class GameView(arcade.View):
         spawn_fire = self.tile_map.object_lists["Fire_spawn"][0]
         spawn_water = self.tile_map.object_lists["Water_spawn"][0]
         # Fire
-        self.fire = Player("assets/sprites/fire.png", 0.045, FIRE_CONTROLS)
+        self.fire = Player("assets/sprites/water.png", 0.045, FIRE_CONTROLS)
         self.fire.center_x = spawn_fire.shape[0]
         self.fire.center_y = spawn_fire.shape[1]+self.fire.height / 2
         self.players.append(self.fire)
 
         # Water
-        self.water = Player("assets/sprites/water.png", 0.04, WATER_CONTROLS)
+        self.water = Player("assets/sprites/fire.png", 0.045, WATER_CONTROLS)
         self.water.center_x = spawn_water.shape[0]
         self.water.center_y = spawn_water.shape[1]+self.water.height / 2
         self.players.append(self.water)
@@ -735,8 +722,8 @@ class GameView(arcade.View):
 
 # === Запуск ===
 def main():
-    window = arcade.Window(800, 600, "Главное меню с картинками")
-    menu = MainMenuView()
+    window = arcade.Window(1200, 900, "Главное меню с картинками")
+    menu = SplashView()
     window.audio = AudioManager()
     window.show_view(menu)
     arcade.run()
