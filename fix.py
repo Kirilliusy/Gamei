@@ -212,6 +212,9 @@ class SplashView(arcade.View):
         # Загружаем картинку заставки
         self.background = arcade.load_texture("assets/Start.png")
 
+    def on_show_view(self):
+        super().on_show_view()
+        self.window.audio.play_music("assets/music/menu.mp3")
     def on_draw(self):
         rect = arcade.LBWH(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT)
 
